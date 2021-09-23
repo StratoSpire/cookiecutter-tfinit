@@ -1,0 +1,30 @@
+---
+region: us-east-2
+version: 2021-03-15
+
+resources:
+  - name: {{cookiecutter.admin_role_name}}-role
+    description: {{cookiecutter.admin_role_name}} Role
+    resource_file: templates/platform-admin-role.template
+    parameters:
+      - parameter_key: ManagementAccountId
+        parameter_value: "{{cookiecutter.management_account_id}}"
+    deploy_method: stack_set
+    deployment_targets:
+      organizational_units:
+        - "Security"
+        - "Core"
+        - "Sandbox"
+    regions:
+      - us-east-2
+  - name: mission-iam-access
+    description: This stack creates two IAM roles to be assumed by Mission's Platform tooling. Inventory provides read only access to all services, and Engineering provides administrative access to the account. Each role is used by particular automation tools and systems for providing Mission insights and maangement capabilities into the AWS account.
+    resource_file: templates/mission-iam-access.template
+    deploy_method: stack_set
+    deployment_targets:
+      organizational_units:
+        - "Security"
+        - "Core"
+        - "Sandbox"
+    regions:
+      - us-east-2

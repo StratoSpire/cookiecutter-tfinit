@@ -1,0 +1,70 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: This stack creates two IAM roles to be assumed by Mission's Platform tooling. Inventory provides read only access to all services, and Engineering provides administrative access to the account. Each role is used by particular automation tools and systems for providing Mission insights and maangement capabilities into the AWS account.
+
+Resources:
+  MissionInventoryRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "MissionInventory"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            AWS:
+            - "arn:aws:iam::740920352209:role/services-api-production-ZappaLambdaExecutionRole"
+            - "arn:aws:iam::740920352209:role/services-api-stage-ZappaLambdaExecutionRole"
+            - "arn:aws:iam::740920352209:role/services-api-dev-ZappaLambdaExecutionRole"
+            - "arn:aws:iam::740920352209:role/MissionOperations"
+          Action: "sts:AssumeRole"
+      Policies:
+      - PolicyName: "BillingReadOnly"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: "Allow"
+            Action:
+              - "aws-portal:View*"
+              - "budgets:ViewBudget"
+              - "ce:Get*"
+              - "cur:DescribeReportDefinitions"
+              - "pricing:DescribeServices"
+              - "pricing:Get*"
+            Resource: "*"
+      - PolicyName: "OrganizationsLimited"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+          - Effect: "Allow"
+            Action:
+              - "organizations:Describe*"
+              - "organizations:List*"
+              - "organizations:InviteAccountToOrganization"
+              - "organizations:RemoveAccountFromOrganization"
+            Resource: "*"
+      ManagedPolicyArns:
+      - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+      - "arn:aws:iam::aws:policy/AWSSupportAccess"
+  MissionEngineeringRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      RoleName: "MissionEngineering"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            AWS:
+            - "arn:aws:iam::740920352209:role/tf-runner"
+            - "arn:aws:iam::740920352209:role/chef-runner"
+          Action: "sts:AssumeRole"
+      ManagedPolicyArns:
+      - "arn:aws:iam::aws:policy/AdministratorAccess"
+
+Outputs:
+  MissionInventoryRoleArn:
+    Value: !GetAtt MissionInventoryRole.Arn
+  MissionEngineeringRoleArn:
+    Value: !GetAtt MissionEngineeringRole.Arn

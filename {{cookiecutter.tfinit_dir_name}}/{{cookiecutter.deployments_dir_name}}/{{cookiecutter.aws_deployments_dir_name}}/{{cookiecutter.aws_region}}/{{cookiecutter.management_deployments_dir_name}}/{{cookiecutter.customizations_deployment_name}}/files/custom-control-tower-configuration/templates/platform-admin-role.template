@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Create a role {{cookiecutter.admin_role_name}} role with AdministratorAccess'
+Metadata:
+  Version: 0.7
+Parameters:
+  ManagementAccountId:
+    Type: String
+    MaxLength: 12
+    MinLength: 12
+    Description: 12 digit id of the management account
+Resources:
+  AssumeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: {{cookiecutter.admin_role_name}}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            "AWS": [!Sub "arn:aws:iam::${ManagementAccountId}:root"]
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
