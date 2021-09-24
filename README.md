@@ -1,8 +1,9 @@
 # cookiecutter-tfinit
 
 ## Requirements
-- [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) >= 0.15
+- [aws-cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) >= 2.2
 - [cookiecutter](https://cookiecutter.readthedocs.io/en/1.7.2/installation.html) >= 1.7
+- [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) >= 0.15
 
 ## Initializing Control Tower
 
