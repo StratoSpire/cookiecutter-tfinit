@@ -4,6 +4,12 @@ Parameters:
   RoleName:
     Description: Name to give the created role
     Type: String
+  GroupName:
+    Description: Name to give the created group
+    Type: String
+  UserName:
+    Description: Name to give the created user
+    Type: String
 Resources:
   AssumeRole:
     Type: AWS::IAM::Role
@@ -19,3 +25,28 @@ Resources:
           - sts:AssumeRole
       ManagedPolicyArns:
         - "arn:aws:iam::aws:policy/AdministratorAccess"
+  Group:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Ref GroupName
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AdministratorAccess"
+  User:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Ref UserName
+  UserGroupMembership:
+    Type: AWS::IAM::UserToGroupAddition
+    Properties:
+      GroupName: !Ref 'Group'
+      Users: [!Ref 'User']
+  UserKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref 'User'
+  SecretsManagerUserKey:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: !Sub "${UserName} IAM key"
+      Name: !Sub "${UserName}-iam-key"
+      SecretString: !Sub '{"access-key-id":"${UserKey}","secret-access-key":"${UserKey.SecretAccessKey}"}'

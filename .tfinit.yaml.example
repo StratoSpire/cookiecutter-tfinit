@@ -5,6 +5,8 @@ default_context:
     tf_state_bucket: "<NAMESPACE>-terraform-backend"
     tf_state_table: "<NAMESPACE>-terraform-backend"
     aws_region: "us-east-1"
+    admin_user_name: "tfinit-admin-user"
+    admin_group_name: "PlatformAdmins"
     admin_role_name: "PlatformAdmin"
     modules_dir_name: "modules"
     deployments_dir_name: "deployments"
