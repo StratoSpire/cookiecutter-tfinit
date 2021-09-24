@@ -1,8 +1,9 @@
 {
+    "project_name": null,
+    "namespace": null,
     "management_account_id": null,
     "tf_state_bucket": null,
     "tf_state_table": null,
-    "tfinit_dir_name": "tfinit",
     "aws_region": "us-east-1",
     "admin_role_name": "PlatformAdmin",
     "modules_dir_name": "modules",

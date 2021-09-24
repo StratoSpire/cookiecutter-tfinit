@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Terraform S3 Backend and DynamoDB Lock Table
+Parameters:
+  StateBackendName:
+    Description: Name to give the State Backend bucket and table
+    Type: String
+Resources:
+  TerraformStateBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Ref StateBackendName
+      AccessControl: "Private"
+      VersioningConfiguration:
+        Status: Enabled
+  TerraformStateTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "LockID"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "LockID"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: "5"
+        WriteCapacityUnits: "5"
+      TableName: !Ref StateBackendName
+
+Outputs:
+  StackName:
+    Value: !Ref AWS::StackName
+  StateBackendName:
+    Description: Name of the State Backend bucket and table
+    Value: !Ref StateBackendName
