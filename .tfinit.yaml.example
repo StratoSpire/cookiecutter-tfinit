@@ -15,4 +15,4 @@ default_context:
     code_commit_git_user_name: "ControlTower Customizations"
     code_commit_git_user_email: "noreply@missioncloud.com"
     aws_provider_version: "3.58.0"
-    terraform_version: "1.0.7"
+    terraform_version: "1.0"
