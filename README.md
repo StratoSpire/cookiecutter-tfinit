@@ -55,7 +55,6 @@ foo@bar:~$ cookiecutter \
 # See generated files
 foo@bar:~$ tree
 .
-├── README.md
 ├── deployments
 │   └── aws
 │       └── us-east-1
@@ -86,8 +85,8 @@ foo@bar:~$ tree
 │   │   ├── bootstrap-requirements.sh
 │   │   └── set-env-vars.sh
 │   └── files
-│       ├── admin-role.yaml
-│       └── terraform-backend.yaml
+│       ├── tfinit-iam.yaml
+│       └── tfinit-terraform-backend.yaml
 └── modules
     └── control-tower-customizations
         ├── main.tf
@@ -110,7 +109,7 @@ foo@bar:~$ tree
         ├── variables.tf
         └── versions.tf
 
-24 directories, 30 files
+24 directories, 29 files
 ```
 
 3. Use the `bootstrap-requirements.sh` script to create the resources Terraform needs (IAM role / S3 bucket / DynamoDB table):
