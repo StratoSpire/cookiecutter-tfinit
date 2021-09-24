@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Create a role with AdministratorAccess'
+Description: 'IAM for use in Terraform'
 Parameters:
   RoleName:
     Description: Name to give the created role

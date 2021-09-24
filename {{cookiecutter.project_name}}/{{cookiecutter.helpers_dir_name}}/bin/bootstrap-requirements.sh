@@ -8,8 +8,8 @@ source "${THIS_SCRIPT_DIR}/set-env-vars.sh"
 # AdministratorAccess Role
 aws cloudformation deploy \
 --region "${AWS_DEFAULT_REGION}" \
---stack-name "${TFINIT_NAMESPACE}-tfinit-admin-role" \
---template-file "${TFINIT_HELPERS_FILES_DIR}/admin-role.yaml" \
+--stack-name "${TFINIT_NAMESPACE}-tfinit-iam" \
+--template-file "${TFINIT_HELPERS_FILES_DIR}/tfinit-iam.yaml" \
 --parameter-overrides "RoleName=${TFINIT_ROLE_NAME}" \
 --capabilities "CAPABILITY_NAMED_IAM"
 
@@ -17,5 +17,5 @@ aws cloudformation deploy \
 aws cloudformation deploy \
 --region "${AWS_DEFAULT_REGION}" \
 --stack-name "${TFINIT_NAMESPACE}-tfinit-terraform-backend" \
---template-file "${TFINIT_HELPERS_FILES_DIR}/terraform-backend.yaml" \
+--template-file "${TFINIT_HELPERS_FILES_DIR}/tfinit-terraform-backend.yaml" \
 --parameter-overrides StateBucketName=${TFINIT_STATE_BUCKET} StateTableName=${TFINIT_STATE_TABLE}
