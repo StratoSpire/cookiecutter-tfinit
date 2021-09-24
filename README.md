@@ -46,6 +46,66 @@ foo@bar:~$ cookiecutter \
   --no-input \
   -o "$(dirname $(pwd))" \
   -f
+
+# See generated files
+foo@bar:~$ tree
+.
+├── README.md
+├── deployments
+│   └── aws
+│       └── us-east-1
+│           └── management
+│               └── control_tower_customizations
+│                   ├── files
+│                   │   └── custom-control-tower-configuration
+│                   │       ├── example-configuration
+│                   │       │   ├── manifest.yaml
+│                   │       │   ├── parameters
+│                   │       │   │   ├── create-ssm-parameter-keys-1.json
+│                   │       │   │   └── create-ssm-parameter-keys-2.json
+│                   │       │   ├── policies
+│                   │       │   │   └── preventive-guardrails.json
+│                   │       │   └── templates
+│                   │       │       ├── create-ssm-parameter-keys-1.template
+│                   │       │       └── create-ssm-parameter-keys-2.template
+│                   │       ├── manifest.yaml
+│                   │       └── templates
+│                   │           ├── mission-iam-access.template
+│                   │           └── platform-admin-role.template
+│                   ├── main.tf
+│                   ├── providers.tf
+│                   ├── terraform.tf
+│                   └── versions.tf
+├── helpers
+│   ├── bin
+│   │   ├── bootstrap-requirements.sh
+│   │   └── set-env-vars.sh
+│   └── files
+│       ├── admin-role.yaml
+│       └── terraform-backend.yaml
+└── modules
+    └── control-tower-customizations
+        ├── main.tf
+        ├── modules
+        │   └── directory-checksum
+        │       ├── examples
+        │       │   └── simple
+        │       │       ├── example-directory
+        │       │       │   └── test.txt
+        │       │       ├── main.tf
+        │       │       └── outputs.tf
+        │       ├── main.tf
+        │       ├── outputs.tf
+        │       ├── scripts
+        │       │   └── checksum.sh
+        │       ├── variables.tf
+        │       └── versions.tf
+        ├── scripts
+        │   └── push_customizations.sh
+        ├── variables.tf
+        └── versions.tf
+
+24 directories, 30 files
 ```
 
 3. Use the `bootstrap-requirements.sh` script to create the resources Terraform needs (IAM role / S3 bucket / DynamoDB table):
