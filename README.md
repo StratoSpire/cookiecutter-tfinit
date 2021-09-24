@@ -38,6 +38,10 @@ aws s3 ls --profile AWSAdministratorAccess-************
 
 ## Initializing the repository
 1. Copy the [.tfinit.yaml.example](.tfinit.yaml.example) file to `.tfinit.yaml` in the root directory of your repository, change the required parameters (`<CURRENT_DIRECTORY_OR_REPO_NAME>`, `<NAMESPACE>`, `<MANAGEMENT_ACCOUNT_ID>`), and make any other changes needed to fit your environment.
+```console
+foo@bar:~$ curl -L -o .tfinit.yaml \
+  https://raw.githubusercontent.com/StratoSpire/cookiecutter-tfinit/main/.tfinit.yaml.example
+```
 
 2. Use cookiecutter to generate the neccessary files within your repo:
 ```console
