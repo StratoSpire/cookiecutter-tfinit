@@ -8,6 +8,7 @@
     "admin_role_name": "PlatformAdmin",
     "modules_dir_name": "modules",
     "deployments_dir_name": "deployments",
+    "helpers_dir_name": "helpers",
     "aws_deployments_dir_name": "aws",
     "management_deployments_dir_name": "management",
     "customizations_deployment_name": "control_tower_customizations",
