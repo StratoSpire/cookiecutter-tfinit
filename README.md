@@ -114,11 +114,13 @@ foo@bar:~$ tree
 
 3. Use the `bootstrap-requirements.sh` script to create the resources Terraform needs (IAM role / S3 bucket / DynamoDB table):
 ```console
+foo@bar:~$ export AWS_PROFILE="<PROFILE_NAME_FROM_SSO>"
 foo@bar:~$ helpers/bin/bootstrap-requirements.sh
 ```
 
 4. Everything is ready to go, and you can now run Terraform to deploy the resources:
 ```console
+foo@bar:~$ export AWS_PROFILE="<PROFILE_NAME_FROM_SSO>"
 foo@bar:~$ cd deployments/aws/us-east-1/management/control_tower_customizations
 foo@bar:~$ terraform init
 foo@bar:~$ terraform plan
