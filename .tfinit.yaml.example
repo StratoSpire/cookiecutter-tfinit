@@ -1,7 +1,8 @@
 default_context:
-    project_name: "<CURRENT_DIRECTORY_OR_REPO_NAME>" # e.g. `terraform-infra`
     namespace: "<NAMESPACE>" # e.g. `stratospire`
     management_account_id: "<MANAGEMENT_ACCOUNT_ID>"
+    project_owner: "<GITHUB_PROJECT_OWNER>" # e.g. `stratospire`
+    project_name: "<GITHUB_PROJECT_NAME>" # e.g. `terraform-infra`
     tf_state_bucket: "<NAMESPACE>-terraform-backend"
     tf_state_table: "<NAMESPACE>-terraform-backend"
     aws_region: "us-east-1"
@@ -10,11 +11,26 @@ default_context:
     admin_role_name: "PlatformAdmin"
     modules_dir_name: "modules"
     deployments_dir_name: "deployments"
-    aws_deployents_dir_name: "aws"
+    helpers_dir_name: "helpers"
+    aws_deployments_dir_name: "aws"
+    github_deployments_dir_name: "github"
     management_deployments_dir_name: "management"
+    docker_images_deployment_name: "docker_images"
+    github_secrets_deployment_name: "github_secrets"
     customizations_deployment_name: "control_tower_customizations"
     code_commit_repository_name: "control-tower-customizations"
     code_commit_git_user_name: "ControlTower Customizations"
     code_commit_git_user_email: "noreply@missioncloud.com"
     aws_provider_version: "3.58.0"
-    terraform_version: "1.0"
+    github_provider_version: "4.15.1"
+    docker_provider_version: "2.15.0"
+    terraform_version: "1.0.8"
+    aws_cli_version: "2.1.9"
+    terraform_docs_version: "0.15.0"
+    ubuntu_version_name: "focal"
+    ubuntu_docker_repo_name: "ubuntu"
+    buildpack_deps_docker_repo_name: "buildpack-deps"
+    aws_cli_docker_repo_name: "aws-cli"
+    terraform_docker_repo_name: "terraform"
+    terraform_docs_docker_repo_name: "terraform-docs"
+    ci_docker_repo_name: "ci"

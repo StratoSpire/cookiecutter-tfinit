@@ -20,7 +20,7 @@ resource "aws_cloudformation_stack" "controltower_customization_initialization" 
 data "aws_region" "current" {}
 
 module "config_checksum" {
-  source    = "./modules/directory-checksum"
+  source    = "../directory-checksum"
   directory = var.config_directory
 }
 

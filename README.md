@@ -4,15 +4,13 @@
 - [aws-cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) >= 2.2
 - [cookiecutter](https://cookiecutter.readthedocs.io/en/1.7.2/installation.html) >= 1.7
 - [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) >= 0.15
+- [docker](https://docs.docker.com/get-docker/)
 
 ## Initializing Control Tower
 
-1. In the console, go to [https://console.aws.amazon.com/controltower](https://console.aws.amazon.com/controltower) and click 'Get Started'
-2. Resolve any issues in the pre-checks.
+1. In the console, go to [https://console.aws.amazon.com/controltower](https://console.aws.amazon.com/controltower) and click 'Set up landing zone'
+2. Resolve any issues found in the pre-flight checks.
 3. Follow the prompts for activating Control Tower.
-    - name your audit and log-archive accounts according to the following standard
-        - `<NAMESPACE>-audit` (e.g. `stratospire-audit`)
-        - `<NAMESPACE>-log-archive` (e.g. `stratospire-log-archive`)
 4. You will recieve an email with the subject 'Invitation to join AWS Single Sign-On'. Click 'Accept invitation'.
 5. Set a new password.
 6. Sign in using your new credentials.
@@ -37,7 +35,7 @@ aws s3 ls --profile AWSAdministratorAccess-************
 ```
 
 ## Initializing the repository
-1. Copy the [.tfinit.yaml.example](.tfinit.yaml.example) file to `.tfinit.yaml` in the root directory of your repository, change the required parameters (`<CURRENT_DIRECTORY_OR_REPO_NAME>`, `<NAMESPACE>`, `<MANAGEMENT_ACCOUNT_ID>`), and make any other changes needed to fit your environment.
+1. Copy the [.tfinit.yaml.example](.tfinit.yaml.example) file to `.tfinit.yaml` in the root directory of your repository, change the required parameters (`<NAMESPACE>`, `<MANAGEMENT_ACCOUNT_ID>`, `<GITHUB_PROJECT_OWNER>`, `<GITHUB_PROJECT_NAME>`), and make any other changes needed to fit your environment.
 ```console
 foo@bar:~$ curl -L -o .tfinit.yaml \
   https://raw.githubusercontent.com/StratoSpire/cookiecutter-tfinit/main/.tfinit.yaml.example
@@ -56,29 +54,73 @@ foo@bar:~$ cookiecutter \
 foo@bar:~$ tree
 .
 ├── deployments
-│   └── aws
-│       └── us-east-1
-│           └── management
-│               └── control_tower_customizations
-│                   ├── files
-│                   │   └── custom-control-tower-configuration
-│                   │       ├── example-configuration
-│                   │       │   ├── manifest.yaml
-│                   │       │   ├── parameters
-│                   │       │   │   ├── create-ssm-parameter-keys-1.json
-│                   │       │   │   └── create-ssm-parameter-keys-2.json
-│                   │       │   ├── policies
-│                   │       │   │   └── preventive-guardrails.json
-│                   │       │   └── templates
-│                   │       │       ├── create-ssm-parameter-keys-1.template
-│                   │       │       └── create-ssm-parameter-keys-2.template
-│                   │       ├── manifest.yaml
-│                   │       └── templates
-│                   │           ├── mission-iam-access.template
-│                   │           └── platform-admin-role.template
+│   ├── aws
+│   │   └── us-east-1
+│   │       └── management
+│   │           ├── control_tower_customizations
+│   │           │   ├── files
+│   │           │   │   └── custom-control-tower-configuration
+│   │           │   │       ├── example-configuration
+│   │           │   │       │   ├── manifest.yaml
+│   │           │   │       │   ├── parameters
+│   │           │   │       │   │   ├── create-ssm-parameter-keys-1.json
+│   │           │   │       │   │   └── create-ssm-parameter-keys-2.json
+│   │           │   │       │   ├── policies
+│   │           │   │       │   │   └── preventive-guardrails.json
+│   │           │   │       │   └── templates
+│   │           │   │       │       ├── create-ssm-parameter-keys-1.template
+│   │           │   │       │       └── create-ssm-parameter-keys-2.template
+│   │           │   │       ├── manifest.yaml
+│   │           │   │       └── templates
+│   │           │   │           ├── mission-iam-access.template
+│   │           │   │           └── platform-admin-role.template
+│   │           │   ├── main.tf
+│   │           │   ├── providers.tf
+│   │           │   ├── terraform.tf
+│   │           │   └── versions.tf
+│   │           └── docker_images
+│   │               ├── files
+│   │               │   ├── aws-cli
+│   │               │   │   └── 2.1.9
+│   │               │   │       ├── Dockerfile
+│   │               │   │       └── entrypoint.sh
+│   │               │   ├── buildpack-deps
+│   │               │   │   ├── curl
+│   │               │   │   │   └── focal
+│   │               │   │   │       └── Dockerfile
+│   │               │   │   ├── focal
+│   │               │   │   │   └── Dockerfile
+│   │               │   │   └── scm
+│   │               │   │       └── focal
+│   │               │   │           └── Dockerfile
+│   │               │   ├── ci
+│   │               │   │   └── latest
+│   │               │   │       ├── Dockerfile
+│   │               │   │       └── entrypoint.sh
+│   │               │   ├── terraform
+│   │               │   │   └── 1.0.7
+│   │               │   │       ├── Dockerfile
+│   │               │   │       └── entrypoint.sh
+│   │               │   ├── terraform-docs
+│   │               │   │   └── 0.15.0
+│   │               │   │       ├── Dockerfile
+│   │               │   │       └── entrypoint.sh
+│   │               │   └── ubuntu
+│   │               │       └── focal
+│   │               │           ├── Dockerfile
+│   │               │           └── uidgidwrap
+│   │               ├── main.tf
+│   │               ├── providers.tf
+│   │               ├── terraform.tf
+│   │               └── versions.tf
+│   └── github
+│       └── stratospire
+│           └── terraform-infra
+│               └── github_secrets
 │                   ├── main.tf
 │                   ├── providers.tf
 │                   ├── terraform.tf
+│                   ├── variables.tf
 │                   └── versions.tf
 ├── helpers
 │   ├── bin
@@ -88,33 +130,38 @@ foo@bar:~$ tree
 │       ├── tfinit-iam.yaml
 │       └── tfinit-terraform-backend.yaml
 └── modules
-    └── control-tower-customizations
+    ├── control-tower-customizations
+    │   ├── main.tf
+    │   ├── scripts
+    │   │   └── push_customizations.sh
+    │   ├── variables.tf
+    │   └── versions.tf
+    ├── directory-checksum
+    │   ├── examples
+    │   │   └── simple
+    │   │       ├── example-directory
+    │   │       │   └── test.txt
+    │   │       ├── main.tf
+    │   │       └── outputs.tf
+    │   ├── main.tf
+    │   ├── outputs.tf
+    │   ├── scripts
+    │   │   └── checksum.sh
+    │   ├── variables.tf
+    │   └── versions.tf
+    └── docker-image
         ├── main.tf
-        ├── modules
-        │   └── directory-checksum
-        │       ├── examples
-        │       │   └── simple
-        │       │       ├── example-directory
-        │       │       │   └── test.txt
-        │       │       ├── main.tf
-        │       │       └── outputs.tf
-        │       ├── main.tf
-        │       ├── outputs.tf
-        │       ├── scripts
-        │       │   └── checksum.sh
-        │       ├── variables.tf
-        │       └── versions.tf
-        ├── scripts
-        │   └── push_customizations.sh
+        ├── outputs.tf
         ├── variables.tf
         └── versions.tf
 
-24 directories, 29 files
+46 directories, 55 files
 ```
 
 3. Use the `bootstrap-requirements.sh` script to create the resources Terraform needs (IAM role / S3 bucket / DynamoDB table):
 ```console
 foo@bar:~$ export AWS_PROFILE="<PROFILE_NAME_FROM_SSO>"
+foo@bar:~$ export GITHUB_TOKEN="<YOUR_GITHUB_TOKEN>"
 foo@bar:~$ helpers/bin/bootstrap-requirements.sh
 ```
 

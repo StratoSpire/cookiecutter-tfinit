@@ -50,3 +50,7 @@ Resources:
       Description: !Sub "${UserName} IAM key"
       Name: !Sub "${UserName}-iam-key"
       SecretString: !Sub '{"access-key-id":"${UserKey}","secret-access-key":"${UserKey.SecretAccessKey}"}'
+
+Outputs:
+  SecretsManagerUserKeyArn:
+    Value: !Ref SecretsManagerUserKey
