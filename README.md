@@ -1,10 +1,26 @@
 # cookiecutter-tfinit
 
+## What this template creates
+- CloudFormation stacks in the ControlTower Management account
+  - IAM configuration for use in CI
+    - group
+    - user
+    - access key / secret
+  - Terraform State Backend
+    - S3 Bucket
+    - DynamoDB Table
+- Docker Images for use in GitHub Actions
+- GitHub Actions Configuration
+  - secrets
+  - workflows / pipelines
+    - primary branch push
+    - pull request
+- [ControlTower Customizations Implementation](https://aws.amazon.com/solutions/implementations/customizations-for-aws-control-tower/)
+
 ## Requirements
 - [aws-cli](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html) >= 2.2
 - [cookiecutter](https://cookiecutter.readthedocs.io/en/1.7.2/installation.html) >= 1.7
 - [terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) >= 0.15
-- [docker](https://docs.docker.com/get-docker/)
 
 ## Initializing Control Tower
 
@@ -78,50 +94,42 @@ foo@bar:~$ tree
 │   │           │   ├── providers.tf
 │   │           │   ├── terraform.tf
 │   │           │   └── versions.tf
-│   │           └── docker_images
-│   │               ├── files
-│   │               │   ├── aws-cli
-│   │               │   │   └── 2.1.9
-│   │               │   │       ├── Dockerfile
-│   │               │   │       └── entrypoint.sh
-│   │               │   ├── buildpack-deps
-│   │               │   │   ├── curl
-│   │               │   │   │   └── focal
-│   │               │   │   │       └── Dockerfile
-│   │               │   │   ├── focal
-│   │               │   │   │   └── Dockerfile
-│   │               │   │   └── scm
-│   │               │   │       └── focal
-│   │               │   │           └── Dockerfile
-│   │               │   ├── ci
-│   │               │   │   └── latest
-│   │               │   │       ├── Dockerfile
-│   │               │   │       └── entrypoint.sh
-│   │               │   ├── terraform
-│   │               │   │   └── 1.0.7
-│   │               │   │       ├── Dockerfile
-│   │               │   │       └── entrypoint.sh
-│   │               │   ├── terraform-docs
-│   │               │   │   └── 0.15.0
-│   │               │   │       ├── Dockerfile
-│   │               │   │       └── entrypoint.sh
-│   │               │   └── ubuntu
-│   │               │       └── focal
-│   │               │           ├── Dockerfile
-│   │               │           └── uidgidwrap
+│   │           └── ecr_repositories
 │   │               ├── main.tf
 │   │               ├── providers.tf
 │   │               ├── terraform.tf
 │   │               └── versions.tf
 │   └── github
 │       └── stratospire
-│           └── terraform-infra
+│           └── test_cookiecutter
 │               └── github_secrets
 │                   ├── main.tf
 │                   ├── providers.tf
 │                   ├── terraform.tf
 │                   ├── variables.tf
 │                   └── versions.tf
+├── docker
+│   ├── aws-cli
+│   │   └── 2.1.9
+│   │       ├── Dockerfile
+│   │       └── entrypoint.sh
+│   ├── buildpack-deps
+│   │   ├── curl
+│   │   │   └── focal
+│   │   │       └── Dockerfile
+│   │   ├── focal
+│   │   │   └── Dockerfile
+│   │   └── scm
+│   │       └── focal
+│   │           └── Dockerfile
+│   ├── terraform
+│   │   └── 1.0.8
+│   │       ├── Dockerfile
+│   │       └── entrypoint.sh
+│   └── ubuntu
+│       └── focal
+│           ├── Dockerfile
+│           └── uidgidwrap
 ├── helpers
 │   ├── bin
 │   │   ├── bootstrap-requirements.sh
@@ -136,40 +144,33 @@ foo@bar:~$ tree
     │   │   └── push_customizations.sh
     │   ├── variables.tf
     │   └── versions.tf
-    ├── directory-checksum
-    │   ├── examples
-    │   │   └── simple
-    │   │       ├── example-directory
-    │   │       │   └── test.txt
-    │   │       ├── main.tf
-    │   │       └── outputs.tf
-    │   ├── main.tf
-    │   ├── outputs.tf
-    │   ├── scripts
-    │   │   └── checksum.sh
-    │   ├── variables.tf
-    │   └── versions.tf
-    └── docker-image
+    └── directory-checksum
+        ├── examples
+        │   └── simple
+        │       ├── example-directory
+        │       │   └── test.txt
+        │       ├── main.tf
+        │       └── outputs.tf
         ├── main.tf
         ├── outputs.tf
+        ├── scripts
+        │   └── checksum.sh
         ├── variables.tf
         └── versions.tf
 
-46 directories, 55 files
+41 directories, 47 files
 ```
 
-3. Use the `bootstrap-requirements.sh` script to create the resources Terraform needs (IAM role / S3 bucket / DynamoDB table):
+3. Use the `bootstrap-requirements.sh` script to create the resources Terraform needs (IAM role / S3 bucket / DynamoDB table / GitHub Actions secrets):
 ```console
 foo@bar:~$ export AWS_PROFILE="<PROFILE_NAME_FROM_SSO>"
 foo@bar:~$ export GITHUB_TOKEN="<YOUR_GITHUB_TOKEN>"
-foo@bar:~$ helpers/bin/bootstrap-requirements.sh
+foo@bar:~$ ./helpers/bin/bootstrap-requirements.sh
 ```
 
-4. Everything is ready to go, and you can now run Terraform to deploy the resources:
+4. Everything is ready to go! You can now commit your code for the pipeline to pick up:
 ```console
-foo@bar:~$ export AWS_PROFILE="<PROFILE_NAME_FROM_SSO>"
-foo@bar:~$ cd deployments/aws/us-east-1/management/control_tower_customizations
-foo@bar:~$ terraform init
-foo@bar:~$ terraform plan
-foo@bar:~$ terraform apply
+foo@bar:~$ git add -A
+foo@bar:~$ git commit -m "initial commit of tfinit"
+foo@bar:~$ git push origin main
 ```

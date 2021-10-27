@@ -1,5 +1,5 @@
 ARG UBUNTU_RELEASE_NAME={{cookiecutter.ubuntu_version_name}}
-FROM docker.io/{{cookiecutter.management_account_id}}.dkr.ecr.{{cookiecutter.aws_region}}.amazonaws.com/{{cookiecutter.buildpack_deps_docker_repo_name}}-scm:${UBUNTU_RELEASE_NAME}
+FROM {{cookiecutter.management_account_id}}.dkr.ecr.{{cookiecutter.aws_region}}.amazonaws.com/{{cookiecutter.buildpack_deps_docker_repo_name}}:scm-${UBUNTU_RELEASE_NAME}
 
 ARG AWS_CLI_VERSION="{{cookiecutter.aws_cli_version}}"
 ENV AWS_CLI_VERSION=${AWS_CLI_VERSION}

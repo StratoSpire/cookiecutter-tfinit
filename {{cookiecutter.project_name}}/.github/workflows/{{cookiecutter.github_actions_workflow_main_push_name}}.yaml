@@ -1,0 +1,305 @@
+name: {{cookiecutter.github_actions_workflow_main_push_name}}
+
+on:
+  push:
+    branches:
+      - '{{cookiecutter.github_primary_branch_name}}'
+
+jobs:
+  ecr_repositories:
+    name: ecr_repositories
+    runs-on: ubuntu-latest
+    container:
+      image: hashicorp/terraform:{{cookiecutter.terraform_version}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: terraform apply
+        env:
+          AWS_ACCESS_KEY_ID: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          AWS_SECRET_ACCESS_KEY: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+        working-directory: {{cookiecutter.deployments_dir_name}}/{{cookiecutter.aws_deployments_dir_name}}/{{cookiecutter.aws_region}}/{{cookiecutter.management_deployments_dir_name}}/{{cookiecutter.ecr_repositories_deployment_name}}
+        run: |
+          terraform init
+          terraform apply -auto-approve
+
+  ecr_login:
+    name: ecr_login
+    outputs:
+      ECR_PASSWORD: "{{'${{ steps.ecr-login-pwd.outputs.ECR_PASSWORD }}'}}"
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_repositories
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: "{{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}"
+        aws-region: {{cookiecutter.aws_region}}
+        aws-secret-access-key: "{{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}"
+    - id: login-ecr
+      name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v1
+    - id: ecr-login-pwd
+      name: retrieve ecr password and store as output
+      run: |
+        PWD=$(aws ecr get-login-password --region {{cookiecutter.aws_region}})
+        echo "::set-output name=ECR_PASSWORD::${PWD}"
+
+  docker_image_ubuntu:
+    name: docker_image_ubuntu
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_repositories
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          aws-secret-access-key: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+          aws-region: {{cookiecutter.aws_region}}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: docker build push
+        run: |
+          set -e
+          source ./{{cookiecutter.helpers_dir_name}}/bin/set-env-vars.sh
+          docker pull "${TFINIT_ECR_REGISTRY}/{{cookiecutter.ubuntu_docker_repo_name}}:{{cookiecutter.ubuntu_version_name}}" || true
+          docker build \
+            --build-arg UBUNTU_RELEASE_NAME="{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.ubuntu_docker_repo_name}}:{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.ubuntu_docker_repo_name}}:latest" \
+            "${TFINIT_DOCKER_IMAGES_DIR}/{{cookiecutter.ubuntu_docker_repo_name}}/{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.ubuntu_docker_repo_name}}:{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.ubuntu_docker_repo_name}}:latest"
+
+  docker_image_buildpack_deps_curl:
+    name: docker_image_buildpack_deps_curl
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_repositories
+      - docker_image_ubuntu
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          aws-secret-access-key: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+          aws-region: {{cookiecutter.aws_region}}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: docker build push
+        run: |
+          set -e
+          source ./{{cookiecutter.helpers_dir_name}}/bin/set-env-vars.sh
+          docker pull "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:curl-{{cookiecutter.ubuntu_version_name}}" || true
+          docker build \
+            --build-arg UBUNTU_RELEASE_NAME="{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:curl-{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:curl" \
+            "${TFINIT_DOCKER_IMAGES_DIR}/{{cookiecutter.buildpack_deps_docker_repo_name}}/curl/{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:curl-{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:curl"
+
+  docker_image_buildpack_deps_scm:
+    name: docker_image_buildpack_deps_scm
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_repositories
+      - docker_image_buildpack_deps_curl
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          aws-secret-access-key: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+          aws-region: {{cookiecutter.aws_region}}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: docker build push
+        run: |
+          set -e
+          source ./{{cookiecutter.helpers_dir_name}}/bin/set-env-vars.sh
+          docker pull "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:scm-{{cookiecutter.ubuntu_version_name}}" || true
+          docker build \
+            --build-arg UBUNTU_RELEASE_NAME="{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:scm-{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:scm" \
+            "${TFINIT_DOCKER_IMAGES_DIR}/{{cookiecutter.buildpack_deps_docker_repo_name}}/scm/{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:scm-{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:scm"
+
+  docker_image_buildpack_deps:
+    name: docker_image_buildpack_deps
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_repositories
+      - docker_image_buildpack_deps_scm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          aws-secret-access-key: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+          aws-region: {{cookiecutter.aws_region}}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: docker build push
+        run: |
+          set -e
+          source ./{{cookiecutter.helpers_dir_name}}/bin/set-env-vars.sh
+          docker pull "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:{{cookiecutter.ubuntu_version_name}}" || true
+          docker build \
+            --build-arg UBUNTU_RELEASE_NAME="{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:latest" \
+            "${TFINIT_DOCKER_IMAGES_DIR}/{{cookiecutter.buildpack_deps_docker_repo_name}}/{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.buildpack_deps_docker_repo_name}}:latest"
+
+  docker_image_aws_cli:
+    name: docker_image_aws_cli
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_repositories
+      - docker_image_buildpack_deps_scm
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          aws-secret-access-key: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+          aws-region: {{cookiecutter.aws_region}}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: docker build push
+        run: |
+          set -e
+          source ./{{cookiecutter.helpers_dir_name}}/bin/set-env-vars.sh
+          docker pull "${TFINIT_ECR_REGISTRY}/{{cookiecutter.aws_cli_docker_repo_name}}:{{cookiecutter.aws_cli_version}}" || true
+          docker build \
+            --build-arg UBUNTU_RELEASE_NAME="{{cookiecutter.ubuntu_version_name}}" \
+            --build-arg AWS_CLI_VERSION="{{cookiecutter.aws_cli_version}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.aws_cli_docker_repo_name}}:{{cookiecutter.aws_cli_version}}-{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.aws_cli_docker_repo_name}}:{{cookiecutter.aws_cli_version}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.aws_cli_docker_repo_name}}:latest" \
+            "${TFINIT_DOCKER_IMAGES_DIR}/{{cookiecutter.aws_cli_docker_repo_name}}/{{cookiecutter.aws_cli_version}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.aws_cli_docker_repo_name}}:{{cookiecutter.aws_cli_version}}-{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.aws_cli_docker_repo_name}}:{{cookiecutter.aws_cli_version}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.aws_cli_docker_repo_name}}:latest"
+
+  docker_image_terraform:
+    name: docker_image_terraform
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_repositories
+      - docker_image_aws_cli
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          aws-secret-access-key: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+          aws-region: {{cookiecutter.aws_region}}
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: docker build push
+        run: |
+          set -e
+          source ./{{cookiecutter.helpers_dir_name}}/bin/set-env-vars.sh
+          docker pull "${TFINIT_ECR_REGISTRY}/{{cookiecutter.terraform_docker_repo_name}}:{{cookiecutter.terraform_version}}" || true
+          docker build \
+            --build-arg UBUNTU_RELEASE_NAME="{{cookiecutter.ubuntu_version_name}}" \
+            --build-arg TERRAFORM_VERSION="{{cookiecutter.terraform_version}}" \
+            --build-arg TERRAFORM_DOCS_VERSION="{{cookiecutter.terraform_docs_version}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.terraform_docker_repo_name}}:{{cookiecutter.terraform_version}}-{{cookiecutter.ubuntu_version_name}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.terraform_docker_repo_name}}:{{cookiecutter.terraform_version}}" \
+            -t "${TFINIT_ECR_REGISTRY}/{{cookiecutter.terraform_docker_repo_name}}:latest" \
+            "${TFINIT_DOCKER_IMAGES_DIR}/{{cookiecutter.terraform_docker_repo_name}}/{{cookiecutter.terraform_version}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.terraform_docker_repo_name}}:{{cookiecutter.terraform_version}}-{{cookiecutter.ubuntu_version_name}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.terraform_docker_repo_name}}:{{cookiecutter.terraform_version}}"
+          docker push "${TFINIT_ECR_REGISTRY}/{{cookiecutter.terraform_docker_repo_name}}:latest"
+
+  github_secrets:
+    name: github_secrets
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_login
+      - docker_image_terraform
+    container:
+      credentials:
+        password: "{{'${{ needs.ecr_login.outputs.ECR_PASSWORD }}'}}"
+        username: AWS
+      image: {{cookiecutter.management_account_id}}.dkr.ecr.{{cookiecutter.aws_region}}.amazonaws.com/{{cookiecutter.terraform_docker_repo_name}}:{{cookiecutter.terraform_version}}-{{cookiecutter.ubuntu_version_name}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: terraform apply
+        env:
+          AWS_ACCESS_KEY_ID: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          AWS_SECRET_ACCESS_KEY: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+          TF_VAR_github_token: {{'${{ secrets.TFINIT_GH_TOKEN }}'}}
+        working-directory: {{cookiecutter.deployments_dir_name}}/{{cookiecutter.github_deployments_dir_name}}/{{cookiecutter.project_owner}}/{{cookiecutter.project_name}}/{{cookiecutter.github_secrets_deployment_name}}
+        run: |
+          terraform init
+          terraform apply -auto-approve
+
+  control_tower_customizations:
+    name: control_tower_customizations
+    runs-on: ubuntu-latest
+    needs:
+      - ecr_login
+      - github_secrets
+      - docker_image_terraform
+    container:
+      credentials:
+        password: "{{'${{ needs.ecr_login.outputs.ECR_PASSWORD }}'}}"
+        username: AWS
+      image: {{cookiecutter.management_account_id}}.dkr.ecr.{{cookiecutter.aws_region}}.amazonaws.com/{{cookiecutter.terraform_docker_repo_name}}:{{cookiecutter.terraform_version}}-{{cookiecutter.ubuntu_version_name}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: terraform apply
+        env:
+          AWS_ACCESS_KEY_ID: {{'${{ secrets.TFINIT_AWS_ACCESS_KEY_ID }}'}}
+          AWS_SECRET_ACCESS_KEY: {{'${{ secrets.TFINIT_AWS_SECRET_ACCESS_KEY }}'}}
+        working-directory: {{cookiecutter.deployments_dir_name}}/{{cookiecutter.aws_deployments_dir_name}}/{{cookiecutter.aws_region}}/{{cookiecutter.management_deployments_dir_name}}/{{cookiecutter.ecr_repositories_deployment_name}}
+        run: |
+          terraform init
+          terraform apply -auto-approve

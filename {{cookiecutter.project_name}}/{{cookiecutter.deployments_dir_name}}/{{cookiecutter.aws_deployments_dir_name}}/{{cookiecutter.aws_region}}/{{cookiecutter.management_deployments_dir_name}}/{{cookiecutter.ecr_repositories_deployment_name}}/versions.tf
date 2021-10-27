@@ -5,9 +5,5 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> {{cookiecutter.aws_provider_version}}"
     }
-    docker = {
-      source  = "kreuzwerker/docker"
-      version = ">= {{cookiecutter.docker_provider_version}}"
-    }
   }
 }

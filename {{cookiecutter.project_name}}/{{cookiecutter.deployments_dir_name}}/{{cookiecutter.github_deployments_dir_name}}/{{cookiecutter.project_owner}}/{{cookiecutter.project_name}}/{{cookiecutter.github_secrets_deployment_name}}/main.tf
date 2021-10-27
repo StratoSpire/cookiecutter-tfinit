@@ -14,14 +14,20 @@ data "aws_secretsmanager_secret_version" "tfinit_iam" {
   secret_id = data.aws_secretsmanager_secret.tfinit_iam.id
 }
 
+resource "github_actions_secret" "github_token" {
+  repository      = local.repository_name
+  secret_name     = "TFINIT_GH_TOKEN"
+  plaintext_value = var.github_token
+}
+
 resource "github_actions_secret" "access_key_id" {
   repository      = local.repository_name
-  secret_name     = "AWS_ACCESS_KEY_ID"
+  secret_name     = "TFINIT_AWS_ACCESS_KEY_ID"
   plaintext_value = jsondecode(data.aws_secretsmanager_secret_version.tfinit_iam.secret_string)["access-key-id"]
 }
 
 resource "github_actions_secret" "secret_access_key" {
   repository      = local.repository_name
-  secret_name     = "AWS_SECRET_ACCESS_KEY"
+  secret_name     = "TFINIT_AWS_SECRET_ACCESS_KEY"
   plaintext_value = jsondecode(data.aws_secretsmanager_secret_version.tfinit_iam.secret_string)["secret-access-key"]
 }

@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+set -eo pipefail
 
 THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "${THIS_SCRIPT_DIR}/set-env-vars.sh"
@@ -25,19 +25,7 @@ aws cloudformation deploy \
         StateBucketName=${TFINIT_STATE_BUCKET} \
         StateTableName=${TFINIT_STATE_TABLE}
 
-# Login to ECR
-aws ecr get-login-password \
-    --region "${AWS_DEFAULT_REGION}" | \
-        docker login \
-        --username AWS \
-        --password-stdin "${TFINIT_MANAGEMENT_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"
-
-# Build and publish the Terraform image
-cd "${TFINIT_DOCKER_IMAGES_DEPLOYMENT_DIR}"
-terraform init
-terraform apply -auto-approve -target module.docker_image_terraform
-
 # Create the GitHub Actions secrets
 cd "${TFINIT_GITHUB_ACTIONS_SECRETS_DEPLOYMENT_DIR}"
 terraform init
-terraform apply -auto-approve -var repository_name="${TFINIT_PROJECT_NAME}"
+terraform apply -auto-approve -var github_token="${GITHUB_TOKEN}"
